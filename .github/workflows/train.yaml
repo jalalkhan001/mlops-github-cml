@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   train:
-    runs-on: ubuntu-latest  # ✅ Use GitHub-hosted runner
+    runs-on: ubuntu-latest  # Use default GitHub runner with up-to-date Node.js & Python
 
     steps:
       # ✅ Step 1: Checkout the code
@@ -17,28 +17,24 @@ jobs:
         with:
           python-version: '3.9'
 
-      # ✅ Step 3: Install dependencies
+      # ✅ Step 3: Install Python dependencies
       - name: Install Python dependencies
         run: pip install -r requirements.txt
 
-      # ✅ Step 4: Train the model (outputs model.pkl, metrics.txt, and plots/accuracy.png)
+      # ✅ Step 4: Train the ML model
       - name: Train model
         run: python train.py
 
-      # ✅ Step 5: Generate and post CML report using Docker
-      - name: Run CML Report (inside container)
+      # ✅ Step 5: Install CML (globally via npm)
+      - name: Install CML
+        run: npm install -g @dvcorg/cml
+
+      # ✅ Step 6: Generate and post the CML report
+      - name: Create Report
         env:
-          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 🔐 Built-in GitHub token to allow PR comments
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Required to post comment on PR
         run: |
-          docker run --rm \
-            -v $PWD:/workspace \
-            -w /workspace \
-            -e REPO_TOKEN=${{ secrets.GITHUB_TOKEN }} \
-            dvcorg/cml-py3:latest \
-            bash -c "
-              npm install -g @dvcorg/cml
-              echo '## 🎯 Model Metrics' > report.md
-              cat metrics.txt >> report.md
-              echo '![Accuracy](./plots/accuracy.png)' >> report.md
-              cml comment create report.md
-            "
+          echo "## 🎯 Model Metrics" > report.md
+          cat metrics.txt >> report.md
+          echo "![Accuracy](./plots/accuracy.png)" >> report.md
+          cml comment create report.md
