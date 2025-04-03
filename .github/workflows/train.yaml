@@ -1,38 +1,38 @@
-# ✅ Name of the GitHub Actions workflow shown in the "Actions" tab
 name: Train and Report
 
-# ✅ Trigger the workflow when:
-# - Code is pushed to any branch
-# - A pull request is created or updated
 on: [push, pull_request]
 
 jobs:
   train:
-    # ✅ Use a GitHub-hosted runner with Ubuntu
-    runs-on: ubuntu-latest
-
-    # ✅ Use a container that includes DVC, Python, CML preinstalled
-    container:
-      image: docker://dvcorg/cml-py3:latest
+    runs-on: ubuntu-latest  # 🔄 Use GitHub-hosted Ubuntu runner
 
     steps:
-      # ✅ Step 1: Checkout the code from your GitHub repository
       - name: Checkout repo
-        uses: actions/checkout@v2  # Uses the latest stable v3.x of the checkout action
+        uses: actions/checkout@v3  # ✅ Works fine now, host has compatible glibc
 
-      # ✅ Step 2: Run training script
-      # Installs dependencies, runs model training, generates metrics.txt and plot
-      - name: Run training
-        run: |
-          pip install -r requirements.txt  # Install Python dependencies
-          python train.py                  # Run training script that outputs metrics and plot
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
 
-      # ✅ Step 3: Create a report using CML and post it as a comment in the PR
-      - name: CML Report
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Train model
+        run: python train.py
+
+      - name: Run CML Report (inside container)
         env:
-          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 🔐 Built-in GitHub token to allow comment creation
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "## 🎯 Model Metrics" > report.md           # Create markdown heading
-          cat metrics.txt >> report.md                     # Append model metrics
-          echo "![Accuracy](./plots/accuracy.png)" >> report.md  # Embed the accuracy plot image
-          cml comment create report.md                     # Use CML to post a comment in the PR or commit
+          docker run --rm \
+            -v $PWD:/workspace \
+            -w /workspace \
+            -e REPO_TOKEN=${{ secrets.GITHUB_TOKEN }} \
+            dvcorg/cml-py3:latest \
+            bash -c "
+              echo '## 🎯 Model Metrics' > report.md
+              cat metrics.txt >> report.md
+              echo '![Accuracy](./plots/accuracy.png)' >> report.md
+              cml comment create report.md
+            "
