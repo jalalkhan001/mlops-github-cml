@@ -2,37 +2,35 @@ name: Train and Report
 
 on: [push, pull_request]
 
+permissions:
+  contents: read
+  pull-requests: write  # ✅ Required for cml comment to work
+
 jobs:
   train:
-    runs-on: ubuntu-latest  # Use default GitHub runner with up-to-date Node.js & Python
+    runs-on: ubuntu-latest
 
     steps:
-      # ✅ Step 1: Checkout the code
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      # ✅ Step 2: Set up Python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
-      # ✅ Step 3: Install Python dependencies
-      - name: Install Python dependencies
+      - name: Install dependencies
         run: pip install -r requirements.txt
 
-      # ✅ Step 4: Train the ML model
       - name: Train model
         run: python train.py
 
-      # ✅ Step 5: Install CML (globally via npm)
       - name: Install CML
         run: npm install -g @dvcorg/cml
 
-      # ✅ Step 6: Generate and post the CML report
       - name: Create Report
         env:
-          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Required to post comment on PR
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "## 🎯 Model Metrics" > report.md
           cat metrics.txt >> report.md
