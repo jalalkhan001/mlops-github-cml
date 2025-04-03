@@ -4,26 +4,31 @@ on: [push, pull_request]
 
 jobs:
   train:
-    runs-on: ubuntu-latest  # 🔄 Use GitHub-hosted Ubuntu runner
+    runs-on: ubuntu-latest  # ✅ Use GitHub-hosted runner
 
     steps:
+      # ✅ Step 1: Checkout the code
       - name: Checkout repo
-        uses: actions/checkout@v3  # ✅ Works fine now, host has compatible glibc
+        uses: actions/checkout@v3
 
+      # ✅ Step 2: Set up Python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
-      - name: Install dependencies
+      # ✅ Step 3: Install dependencies
+      - name: Install Python dependencies
         run: pip install -r requirements.txt
 
+      # ✅ Step 4: Train the model (outputs model.pkl, metrics.txt, and plots/accuracy.png)
       - name: Train model
         run: python train.py
 
+      # ✅ Step 5: Generate and post CML report using Docker
       - name: Run CML Report (inside container)
         env:
-          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 🔐 Built-in GitHub token to allow PR comments
         run: |
           docker run --rm \
             -v $PWD:/workspace \
@@ -31,6 +36,7 @@ jobs:
             -e REPO_TOKEN=${{ secrets.GITHUB_TOKEN }} \
             dvcorg/cml-py3:latest \
             bash -c "
+              npm install -g @dvcorg/cml
               echo '## 🎯 Model Metrics' > report.md
               cat metrics.txt >> report.md
               echo '![Accuracy](./plots/accuracy.png)' >> report.md
