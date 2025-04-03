@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 permissions:
   contents: read
-  pull-requests: write  # ✅ Required for cml comment to work.
+  pull-requests: write  # ✅ Required for cml comment to work..
 
 jobs:
   train:
@@ -36,3 +36,5 @@ jobs:
           cat metrics.txt >> report.md
           echo "![Accuracy](./plots/accuracy.png)" >> report.md
           cml comment create report.md
+
+      
