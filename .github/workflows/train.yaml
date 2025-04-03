@@ -18,7 +18,7 @@ jobs:
     steps:
       # ✅ Step 1: Checkout the code from your GitHub repository
       - name: Checkout repo
-        uses: actions/checkout@v3  # Uses the latest stable v3.x of the checkout action
+        uses: actions/checkout@v2  # Uses the latest stable v3.x of the checkout action
 
       # ✅ Step 2: Run training script
       # Installs dependencies, runs model training, generates metrics.txt and plot
