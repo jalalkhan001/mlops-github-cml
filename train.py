@@ -26,7 +26,7 @@ with open("metrics.txt", "w") as f:
 # Save plot
 plt.bar(["Accuracy"], [accuracy])
 plt.ylim(0, 1)
-plt.savefig("plots/accuracy.png")
+plt.savefig("plots/accuracy1.png")
 
 # Save model
 joblib.dump(model, "model.pkl")
